@@ -54,6 +54,10 @@ void main() {
 
     final original = page.posts.first;
     expect(original.author, 'maneli1368');
+    expect(
+      original.avatarUrl,
+      'https://as3.ninisite.com/statics/profile/default/woman2.svg?width=80&height=85',
+    );
     expect(original.isOriginal, isTrue);
     expect(original.html, contains('<strong>دوستان</strong>'));
     expect(original.html, contains('https://as3.ninisite.com/uploads/vaccine.jpg'));
@@ -63,6 +67,7 @@ void main() {
 
     final reply = page.posts.last;
     expect(reply.author, 'پرنسس00');
+    expect(reply.avatarUrl, isNull);
     expect(reply.replyToId, '427526471');
     expect(reply.quotedHtml, contains('نه نزن عوارضش زیاده'));
     expect(reply.quotedHtml, isNot(contains('fa-caret')));

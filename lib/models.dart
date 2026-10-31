@@ -99,6 +99,7 @@ class Post {
     this.publishedAt,
     this.dateLabel,
     this.timeLabel,
+    this.avatarUrl,
   });
 
   final String id;
@@ -107,6 +108,7 @@ class Post {
   final String? quotedHtml;
   final String? replyToId;
   final DateTime? publishedAt;
+  final String? avatarUrl;
   final String? dateLabel;
   final String? timeLabel;
   final bool isOriginal;

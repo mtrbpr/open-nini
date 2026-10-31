@@ -33,10 +33,12 @@ Post? _postFromArticle(Element article, {required bool isOriginal}) {
   final quote = article.querySelector('.topic-post__quotation .reply-message');
   final quotedHtml = sanitizePostHtml(quote);
   final body = sanitizePostHtml(article.querySelector('.post-message'));
+  final avatar = article.querySelector('img.avatar');
   if (body.isEmpty && quotedHtml.isEmpty && !isOriginal) return null;
   return Post(
     id: article.id,
     author: elementText(article.querySelector('span[itemprop="name"]')) ?? 'ناشناس',
+    avatarUrl: avatar == null ? null : imageSource(avatar),
     html: body,
     quotedHtml: quotedHtml.isEmpty ? null : quotedHtml,
     replyToId: quote?.attributes['data-id'],

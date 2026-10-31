@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/dates.dart';
 import '../models.dart';
 import '../nini_scope.dart';
+import '../widgets/author_avatar.dart';
 import '../widgets/paged_list.dart';
 import '../widgets/post_body.dart';
 
@@ -67,6 +68,8 @@ class _PostCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                AuthorAvatar(url: post.avatarUrl),
+                const SizedBox(width: 10),
                 Expanded(child: Text(post.author, style: theme.textTheme.titleSmall)),
                 if (when.isNotEmpty)
                   Text(
