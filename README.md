@@ -1,17 +1,15 @@
-# open_nini
+# Open Nini
 
-A new Flutter project.
+An open-source app for reading [Ninisite](https://www.ninisite.com/discussion) discussions.
 
-## Getting Started
+It is read-only and in Farsi. From the home screen you open a discussion, then its boards, then a thread and its posts. There is no login or posting.
 
-This project is a starting point for a Flutter application.
+## Download
 
-A few resources to get you started if this is your first Flutter project:
+Android builds are on the [releases page](https://github.com/mtrbpr/open-nini/releases). Download the APK (currently `nini-0.1.0.apk`) and allow installation from this source.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+An iOS install file is not in the current release. The iOS project is in this repository and can be opened in Xcode.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Contributing
+
+Contributions are welcome. Open an issue or a pull request.
