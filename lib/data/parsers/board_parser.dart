@@ -16,12 +16,15 @@ BoardPage parseBoardPage(String html, {int page = 1}) {
       .map(_threadFromRow)
       .whereType<ThreadSummary>()
       .toList();
+  final compose = document.querySelector('#topic-form');
   return BoardPage(
     title: title,
     threadCount: countMatch == null ? null : int.tryParse(countMatch.group(1)!),
     threads: threads,
     page: page,
     lastPage: lastPageOf(document),
+    categoryId: int.tryParse(compose?.attributes['data-category-id'] ?? ''),
+    forumId: int.tryParse(compose?.attributes['data-forum-id'] ?? ''),
   );
 }
 

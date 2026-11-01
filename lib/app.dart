@@ -20,6 +20,18 @@ class _OpenNiniAppState extends State<OpenNiniApp> {
   late final _router = createRouter();
 
   @override
+  void initState() {
+    super.initState();
+    _repository.restore();
+  }
+
+  @override
+  void dispose() {
+    if (widget.repository == null) _repository.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return NiniScope(
       repository: _repository,

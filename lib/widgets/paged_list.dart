@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'status_views.dart';
 
 class PageSlice<T> {
-  const PageSlice({required this.items, required this.lastPage, this.title});
+  const PageSlice({required this.items, required this.lastPage, this.title, this.header, this.locked = false});
 
   final List<T> items;
   final int lastPage;
   final String? title;
+  final Widget? header;
+  final bool locked;
 }
 
 class PagedList<T> extends StatefulWidget {
@@ -36,6 +38,7 @@ class _PagedListState<T> extends State<PagedList<T>> {
   final _ids = <String>{};
   int _nextPage = 1;
   int _lastPage = 1;
+  Widget? _header;
   bool _loading = false;
   bool _started = false;
   bool _failed = false;
@@ -75,6 +78,7 @@ class _PagedListState<T> extends State<PagedList<T>> {
         if (reset) {
           _items.clear();
           _ids.clear();
+          _header = slice.header;
         }
         for (final item in slice.items) {
           if (_ids.add(widget.idOf(item))) _items.add(item);
@@ -109,7 +113,19 @@ class _PagedListState<T> extends State<PagedList<T>> {
     if (_items.isEmpty && _failed) {
       return ErrorState(onRetry: () => _load(reset: true));
     }
-    if (_items.isEmpty) return EmptyState(message: widget.emptyMessage);
+    if (_items.isEmpty && _header == null) return EmptyState(message: widget.emptyMessage);
+    if (_items.isEmpty && _header != null) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          _header!,
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(widget.emptyMessage, textAlign: TextAlign.center),
+          ),
+        ],
+      );
+    }
 
     return RefreshIndicator(
       onRefresh: () => _load(reset: true),
@@ -117,10 +133,13 @@ class _PagedListState<T> extends State<PagedList<T>> {
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 8, bottom: 24),
-        itemCount: _items.length + 1,
+        itemCount: _items.length + 1 + (_header == null ? 0 : 1),
         itemBuilder: (context, index) {
-          if (index == _items.length) return _footer(context);
-          return widget.itemBuilder(context, _items[index]);
+          final header = _header;
+          final offset = header == null ? 0 : 1;
+          if (header != null && index == 0) return header;
+          if (index == _items.length + offset) return _footer(context);
+          return widget.itemBuilder(context, _items[index - offset]);
         },
       ),
     );

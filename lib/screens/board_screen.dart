@@ -25,6 +25,12 @@ class _BoardScreenState extends State<BoardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(title.isEmpty ? 'تالار' : title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          TextButton(
+            onPressed: () => openNewTopic(context, path: widget.path, name: title),
+            child: const Text('تاپیک جدید'),
+          ),
+        ],
       ),
       body: PagedList<ThreadSummary>(
         emptyMessage: 'تاپیکی در این تالار نیست.',

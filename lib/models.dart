@@ -69,6 +69,8 @@ class BoardPage {
     required this.threads,
     required this.page,
     required this.lastPage,
+    this.categoryId,
+    this.forumId,
   });
 
   final String title;
@@ -76,6 +78,8 @@ class BoardPage {
   final List<ThreadSummary> threads;
   final int page;
   final int lastPage;
+  final int? categoryId;
+  final int? forumId;
 }
 
 class ThreadSummary {
@@ -107,6 +111,7 @@ class TopicPage {
     required this.posts,
     required this.page,
     required this.lastPage,
+    this.closed = false,
   });
 
   final String title;
@@ -114,6 +119,7 @@ class TopicPage {
   final List<Post> posts;
   final int page;
   final int lastPage;
+  final bool closed;
 }
 
 class Post {
@@ -128,10 +134,14 @@ class Post {
     this.dateLabel,
     this.timeLabel,
     this.avatarUrl,
+    this.authorPath,
+    this.quoteId,
   });
 
   final String id;
   final String author;
+  final String? authorPath;
+  final String? quoteId;
   final String html;
   final String? quotedHtml;
   final String? replyToId;
@@ -147,4 +157,63 @@ class TopicLink {
 
   final int id;
   final String path;
+}
+
+class UserProfile {
+  const UserProfile({
+    required this.name,
+    required this.topics,
+    required this.page,
+    required this.lastPage,
+    this.avatarUrl,
+    this.joined,
+    this.gender,
+    this.age,
+    this.education,
+    this.signature,
+  });
+
+  final String name;
+  final String? avatarUrl;
+  final String? joined;
+  final String? gender;
+  final String? age;
+  final String? education;
+  final String? signature;
+  final List<ProfileTopic> topics;
+  final int page;
+  final int lastPage;
+}
+
+class ProfileTopic {
+  const ProfileTopic({
+    required this.id,
+    required this.title,
+    required this.path,
+    this.dateLabel,
+    this.timeLabel,
+    this.replyCount,
+  });
+
+  final int id;
+  final String title;
+  final String path;
+  final String? dateLabel;
+  final String? timeLabel;
+  final int? replyCount;
+}
+
+class ForumCategory {
+  const ForumCategory({required this.id, required this.name, required this.forums});
+
+  final int id;
+  final String name;
+  final List<ForumOption> forums;
+}
+
+class ForumOption {
+  const ForumOption({required this.id, required this.name});
+
+  final int id;
+  final String name;
 }

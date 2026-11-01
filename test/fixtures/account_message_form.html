@@ -1,0 +1,9 @@
+<form action="/profile/conversation/send" method="post">
+  <label for="users">دریافت کننده</label>
+  <input id="users" name="UserIds" data-url="/profile/conversation/search">
+  <label for="subject">عنوان</label>
+  <input id="subject" name="Subject">
+  <label for="body">متن</label>
+  <textarea id="body" name="Message"></textarea>
+  <input type="hidden" name="__RequestVerificationToken" value="token-message">
+</form>

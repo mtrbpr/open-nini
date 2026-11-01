@@ -9,11 +9,12 @@ import 'package:http/http.dart' as http;
 import 'svg_classes.dart';
 
 class AuthorAvatar extends StatelessWidget {
-  const AuthorAvatar({required this.url, super.key});
+  const AuthorAvatar({required this.url, this.size = defaultSize, super.key});
 
   final String? url;
+  final double size;
 
-  static const size = 40.0;
+  static const defaultSize = 40.0;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class AuthorAvatar extends StatelessWidget {
   Widget _picture(ColorScheme scheme) {
     final url = this.url;
     if (url == null || url.isEmpty) return avatarFallback(scheme);
-    if (_isSvg(url)) return _SvgAvatar(url: url);
+    if (_isSvg(url)) return _SvgAvatar(url: url, size: size);
     return CachedNetworkImage(
       imageUrl: url,
       width: size,
@@ -48,9 +49,10 @@ class AuthorAvatar extends StatelessWidget {
 }
 
 class _SvgAvatar extends StatefulWidget {
-  const _SvgAvatar({required this.url});
+  const _SvgAvatar({required this.url, required this.size});
 
   final String url;
+  final double size;
 
   @override
   State<_SvgAvatar> createState() => _SvgAvatarState();
@@ -93,8 +95,8 @@ class _SvgAvatarState extends State<_SvgAvatar> {
         if (svg == null || svg.isEmpty) return avatarFallback(scheme);
         return SvgPicture.string(
           svg,
-          width: AuthorAvatar.size,
-          height: AuthorAvatar.size,
+          width: widget.size,
+          height: widget.size,
           fit: BoxFit.cover,
           placeholderBuilder: (_) => avatarFallback(scheme),
           errorBuilder: (_, _, _) => avatarFallback(scheme),
