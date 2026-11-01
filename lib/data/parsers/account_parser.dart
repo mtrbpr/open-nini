@@ -109,6 +109,7 @@ AccountSlice parseMessages(Object? json, {required bool sent}) {
       records.add(
         AccountRecord(
           id: _int(item, 'ConversationId'),
+          peer: nickname,
           title: subject.isEmpty ? (nickname ?? 'پیام') : subject,
           subtitle: [nickname, day, time].whereType<String>().where((part) => part.isNotEmpty).join(' · '),
           imageUrl: _string(item, 'Avatar'),

@@ -41,6 +41,7 @@ class AccountRecord {
     this.editPath,
     this.messagePath,
     this.id,
+    this.peer,
     this.unread = false,
     this.open,
     this.action,
@@ -48,6 +49,7 @@ class AccountRecord {
   });
 
   final String title;
+  final String? peer;
   final String? subtitle;
   final String? imageUrl;
   final String? path;
@@ -167,4 +169,78 @@ class MailNotice {
   }
 
   Map<String, Object?> toJson() => {'Id': id, 'Title': title, 'Checked': checked};
+}
+
+class InboxPerson {
+  const InboxPerson({
+    required this.name,
+    required this.subject,
+    required this.threads,
+    this.avatarUrl,
+    this.when,
+    this.unread = false,
+    this.replyConversationId,
+  });
+
+  final String name;
+  final String? avatarUrl;
+  final String subject;
+  final String? when;
+  final bool unread;
+  final int? replyConversationId;
+  final List<String> threads;
+}
+
+class ChatMessage {
+  const ChatMessage({
+    required this.body,
+    required this.mine,
+    required this.conversationId,
+    this.id,
+  });
+
+  final int? id;
+  final int? conversationId;
+  final String body;
+  final bool mine;
+}
+
+class ChatThread {
+  const ChatThread({
+    required this.messages,
+    this.conversationId,
+    this.replyToken,
+    this.replyAction = '/profile/conversation/reply',
+    this.deleteMessageUrl,
+  });
+
+  final int? conversationId;
+  final List<ChatMessage> messages;
+  final String? replyToken;
+  final String replyAction;
+  final String? deleteMessageUrl;
+}
+
+class ChatView {
+  const ChatView({
+    required this.messages,
+    this.replyConversationId,
+    this.replyToken,
+    this.replyAction = '/profile/conversation/reply',
+    this.deleteMessageUrl,
+  });
+
+  final List<ChatMessage> messages;
+  final int? replyConversationId;
+  final String? replyToken;
+  final String replyAction;
+  final String? deleteMessageUrl;
+}
+
+class PersonHit {
+  const PersonHit({required this.name, required this.path, this.avatarUrl});
+
+  final String name;
+  final String path;
+  final String? avatarUrl;
 }

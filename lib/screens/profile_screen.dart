@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/parsers/chat_parser.dart';
 import '../models.dart';
 import '../nini_scope.dart';
 import '../router.dart';
@@ -42,7 +43,12 @@ class ProfileScreen extends StatelessWidget {
                   items: profile.topics,
                   lastPage: profile.lastPage,
                   title: profile.name,
-                  header: _ProfileHeader(profile: profile),
+                  header: _ProfileHeader(
+                    profile: profile,
+                    path: profilePath,
+                    signedIn: repository.signedIn,
+                    own: own,
+                  ),
                 );
               },
               itemBuilder: (context, topic) => _ProfileTopicTile(topic: topic),
@@ -52,9 +58,17 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.profile});
+  const _ProfileHeader({
+    required this.profile,
+    required this.path,
+    required this.signedIn,
+    required this.own,
+  });
 
   final UserProfile profile;
+  final String? path;
+  final bool signedIn;
+  final bool own;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +87,20 @@ class _ProfileHeader extends StatelessWidget {
           AuthorAvatar(url: profile.avatarUrl, size: 72),
           const SizedBox(height: 12),
           Text(profile.name, style: theme.textTheme.titleLarge),
+          if (signedIn && !own && path != null && userGuid(path) != null) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton(
+                  onPressed: () => openChat(context, name: profile.name, avatarUrl: profile.avatarUrl, userPath: path),
+                  child: const Text('گفتگو'),
+                ),
+                OutlinedButton(onPressed: () => _invite(context, path!), child: const Text('دعوت به دوستی')),
+              ],
+            ),
+          ],
           for (final row in rows)
             if (row.$2 != null && row.$2!.isNotEmpty)
               Padding(
@@ -82,6 +110,19 @@ class _ProfileHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<void> _invite(BuildContext context, String path) async {
+  try {
+    final failure = await NiniScope.of(context).account.inviteFriend(path);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(failure ?? 'درخواست دوستی فرستاده شد.')),
+    );
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
   }
 }
 

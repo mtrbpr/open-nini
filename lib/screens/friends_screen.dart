@@ -17,13 +17,12 @@ class FriendsScreen extends StatelessWidget {
           label: 'دوستان من',
           load: (offset) => api.friends(offset: offset),
           actions: (record) => [
-            if (record.messagePath != null)
-              AccountButton(
-                label: 'ارسال پیام',
-                run: () async {
-                  openAccountPage(context, record.messagePath!, title: 'پیام جدید');
-                },
-              ),
+            AccountButton(
+              label: 'ارسال پیام',
+              run: () async {
+                openChat(context, name: record.title, avatarUrl: record.imageUrl, userPath: record.path);
+              },
+            ),
             if (record.id != null)
               AccountButton(
                 label: 'لغو دوستی',

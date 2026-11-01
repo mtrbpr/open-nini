@@ -57,6 +57,10 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
       return;
     }
     final section = accountSection(path);
+    if (section == 'messages') {
+      context.go('/messages');
+      return;
+    }
     if (section == 'picture') {
       openAccountPage(context, '/profile/profilepicture', title: 'تصویر نمایه');
       return;

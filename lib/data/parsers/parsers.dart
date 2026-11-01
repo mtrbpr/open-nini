@@ -1,4 +1,5 @@
 export 'account_parser.dart';
+export 'chat_parser.dart';
 export 'board_parser.dart';
 export 'discussion_parser.dart';
 export 'form_parser.dart';

@@ -96,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     title: 'پیام های من',
                     records: _messages,
                     empty: 'پیامی ندارید.',
-                    onOpen: () => context.push('/account/messages'),
+                    onOpen: () => context.go('/messages'),
                   ),
                   Text('درخواست های دوستی', style: Theme.of(context).textTheme.titleMedium),
                   if (_requests.isEmpty)

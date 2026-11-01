@@ -59,6 +59,146 @@ class AccountApi {
 
   Future<void> deleteMessage(int id) => _post('/profile/Conversation/Delete?id=$id');
 
+  Future<List<InboxPerson>> inbox() async {
+    final received = await _everyMessage(sent: false);
+    final sent = await _everyMessage(sent: true);
+    return groupConversations(received, sent);
+  }
+
+  Future<ChatView> conversation(String name, {String? avatarUrl}) async {
+    final people = await inbox();
+    InboxPerson? person;
+    for (final item in people) {
+      if (item.name != name) continue;
+      person ??= item;
+      if (avatarUrl != null && avatarUrl.isNotEmpty && item.avatarUrl == avatarUrl) {
+        person = item;
+        break;
+      }
+    }
+    if (person == null) return const ChatView(messages: []);
+    final threads = <ChatThread>[];
+    for (final path in person.threads) {
+      threads.add(parseConversation(await _client.get(path)));
+    }
+    threads.sort((a, b) => (a.conversationId ?? 0).compareTo(b.conversationId ?? 0));
+    ChatThread? reply;
+    for (final thread in threads.reversed) {
+      if (thread.replyToken != null && thread.conversationId != null) {
+        reply = thread;
+        break;
+      }
+    }
+    reply ??= threads.reversed.where((thread) => thread.conversationId != null).firstOrNull;
+    return ChatView(
+      messages: [for (final thread in threads) ...thread.messages],
+      replyConversationId: reply?.conversationId ?? person.replyConversationId,
+      replyToken: reply?.replyToken,
+      replyAction: reply?.replyAction ?? '/profile/conversation/reply',
+      deleteMessageUrl: reply?.deleteMessageUrl,
+    );
+  }
+
+  Future<List<PersonHit>> findPeople(String term) async {
+    final query = Uri(path: '/search/users', queryParameters: {'q': term, 'f': '1'}).toString();
+    return parsePeople(await _client.get(query));
+  }
+
+  Future<bool> isFriend(String guid) async {
+    var offset = 0;
+    for (var page = 0; page < 5; page++) {
+      final slice = await friends(offset: offset, pageSize: 40);
+      for (final record in slice.records) {
+        if ((record.path ?? '').contains(guid)) return true;
+      }
+      if (slice.records.isEmpty || !slice.hasMore(offset)) return false;
+      offset += slice.records.length;
+    }
+    return false;
+  }
+
+  Future<String?> inviteFriend(String profilePath) async {
+    final guid = userGuid(profilePath);
+    if (guid == null) return 'شناسه کاربر پیدا نشد.';
+    final html = await _client.get(profilePath);
+    final token = tokenForAction(html, '/user/discussion/sendmessage');
+    if (token == null) return 'فرم دوستی پیدا نشد.';
+    final response = await _client.postForm(
+      '/user/discussion/invitefriend/$guid',
+      {'__RequestVerificationToken': token, 'UserId': guid},
+      referer: '$niniOrigin$profilePath',
+    );
+    return _formFailure(response);
+  }
+
+  Future<String?> sendFirstMessage({required String profilePath, required String message}) async {
+    final guid = userGuid(profilePath);
+    if (guid == null) return 'شناسه کاربر پیدا نشد.';
+    final html = await _client.get(profilePath);
+    final token = tokenForAction(html, '/user/discussion/sendmessage');
+    if (token == null) return 'فرم پیام پیدا نشد.';
+    final response = await _client.postForm(
+      '/user/discussion/sendmessage',
+      {
+        '__RequestVerificationToken': token,
+        'UserId': guid,
+        'Subject': messageSubject(message),
+        'Message': message.trim(),
+      },
+      referer: '$niniOrigin$profilePath',
+    );
+    return _formFailure(response);
+  }
+
+  Future<String?> replyTo({
+    required String action,
+    required int conversationId,
+    required String message,
+    required String token,
+    String? referer,
+  }) async {
+    final response = await _client.postForm(
+      action,
+      {
+        '__RequestVerificationToken': token,
+        'ConversationId': '$conversationId',
+        'Message': message.trim(),
+      },
+      referer: referer ?? '$niniOrigin/profile/conversation/$conversationId',
+    );
+    return _formFailure(response);
+  }
+
+  Future<String?> deleteChatMessage({
+    required String action,
+    required int conversationId,
+    required int messageId,
+    String? token,
+  }) async {
+    final response = await _client.postForm(
+      action,
+      {
+        '__RequestVerificationToken': ?token,
+        'ConversationId': '$conversationId',
+        'ConversationMessageId': '$messageId',
+      },
+      referer: '$niniOrigin/profile/conversation/$conversationId',
+    );
+    return _formFailure(response);
+  }
+
+  Future<List<AccountRecord>> _everyMessage({required bool sent}) async {
+    final records = <AccountRecord>[];
+    var offset = 0;
+    for (var page = 0; page < 5; page++) {
+      final slice = await messages(sent: sent, offset: offset, pageSize: 40);
+      records.addAll(slice.records);
+      if (slice.records.isEmpty || !slice.hasMore(offset)) break;
+      offset += slice.records.length;
+    }
+    return records;
+  }
+
   Future<AccountSlice> topics(String path, {int offset = 0, int pageSize = 20, int orderBy = 0}) {
     return _list(path, offset: offset, pageSize: pageSize, orderBy: orderBy, parse: parseTopics);
   }

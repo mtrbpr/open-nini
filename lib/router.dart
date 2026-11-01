@@ -5,24 +5,49 @@ import 'models.dart';
 import 'screens/account_hub_screen.dart';
 import 'screens/account_page_screen.dart';
 import 'screens/account_section_screen.dart';
+import 'screens/app_shell.dart';
 import 'screens/board_screen.dart';
+import 'screens/chat_screen.dart';
 import 'screens/discussion_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/inbox_screen.dart';
 import 'screens/new_topic_screen.dart';
+import 'screens/people_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/sign_up_screen.dart';
 import 'screens/topic_screen.dart';
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 GoRouter createRouter() {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/messages',
+                builder: (context, state) => const InboxScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/category/:id',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
           final name = state.uri.queryParameters['name'] ?? '';
@@ -31,6 +56,7 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/forum/:id',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
           final name = state.uri.queryParameters['name'] ?? '';
@@ -40,14 +66,17 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/sign-in',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SignInScreen(),
       ),
       GoRoute(
         path: '/sign-up',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SignUpScreen(),
       ),
       GoRoute(
         path: '/profile',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final path = state.uri.queryParameters['path'];
           if (path == null || path.isEmpty) return const AccountHubScreen();
@@ -56,6 +85,7 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/account/page',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => AccountPageScreen(
           path: state.uri.queryParameters['path'] ?? '/profile',
           title: state.uri.queryParameters['title'],
@@ -63,10 +93,26 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/account/:section',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => AccountSectionScreen(section: state.pathParameters['section']!),
       ),
       GoRoute(
+        path: '/people',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const PeopleScreen(),
+      ),
+      GoRoute(
+        path: '/chat',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => ChatScreen(
+          name: state.uri.queryParameters['name'] ?? '',
+          avatarUrl: state.uri.queryParameters['avatar'],
+          userPath: state.uri.queryParameters['user'],
+        ),
+      ),
+      GoRoute(
         path: '/new-topic',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => NewTopicScreen(
           boardPath: state.uri.queryParameters['path'] ?? '',
           boardName: state.uri.queryParameters['name'] ?? '',
@@ -74,6 +120,7 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/topic/:id',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
           final title = state.uri.queryParameters['title'] ?? '';
@@ -134,6 +181,24 @@ void openNewTopic(BuildContext context, {required String path, String? name}) {
       queryParameters: {
         'path': path,
         if (name != null && name.isNotEmpty) 'name': name,
+      },
+    ).toString(),
+  );
+}
+
+Future<Object?> openChat(
+  BuildContext context, {
+  required String name,
+  String? avatarUrl,
+  String? userPath,
+}) {
+  return context.push(
+    Uri(
+      path: '/chat',
+      queryParameters: {
+        'name': name,
+        if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatar': avatarUrl,
+        if (userPath != null && userPath.isNotEmpty) 'user': userPath,
       },
     ).toString(),
   );

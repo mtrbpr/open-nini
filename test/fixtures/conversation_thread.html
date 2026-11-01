@@ -1,0 +1,17 @@
+<div id="conversation-detail" data-id="4" data-delete-url="/profile/conversation/delete" data-delete-message-url="/profile/conversation/deletemessage">
+  <div class="conversation-row mine">
+    <div class="user-name">نرگس</div>
+    <div class="message-text">سلام</div>
+    <a class="delete-message" data-id="9"></a>
+  </div>
+  <div class="conversation-row">
+    <div class="user-name">مریم</div>
+    <div class="message-text">علی</div>
+    <a class="delete-message" data-id="10"></a>
+  </div>
+  <form action="/profile/conversation/reply" method="post">
+    <input type="hidden" name="__RequestVerificationToken" value="token-reply">
+    <input type="hidden" name="ConversationId" value="4">
+    <textarea id="Message" name="Message"></textarea>
+  </form>
+</div>
