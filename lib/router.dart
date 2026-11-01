@@ -43,6 +43,14 @@ GoRouter createRouter() {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/me',
+                builder: (context, state) => const AccountHubScreen(),
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(

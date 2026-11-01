@@ -62,7 +62,14 @@ class AccountApi {
   Future<List<InboxPerson>> inbox() async {
     final received = await _everyMessage(sent: false);
     final sent = await _everyMessage(sent: true);
-    return groupConversations(received, sent);
+    final requests = await _everySlice((offset) => friendRequests(sent: true, offset: offset, pageSize: 40));
+    final contacts = await _everySlice((offset) => friends(offset: offset, pageSize: 40));
+    return mergeInbox(groupConversations(received, sent), requests, contacts);
+  }
+
+  Future<bool> hasPendingRequest(String guid) async {
+    final requests = await _everySlice((offset) => friendRequests(sent: true, offset: offset, pageSize: 40));
+    return requests.any((record) => (record.path ?? '').contains(guid));
   }
 
   Future<ChatView> conversation(String name, {String? avatarUrl}) async {
@@ -188,10 +195,14 @@ class AccountApi {
   }
 
   Future<List<AccountRecord>> _everyMessage({required bool sent}) async {
+    return _everySlice((offset) => messages(sent: sent, offset: offset, pageSize: 40));
+  }
+
+  Future<List<AccountRecord>> _everySlice(Future<AccountSlice> Function(int offset) load) async {
     final records = <AccountRecord>[];
     var offset = 0;
     for (var page = 0; page < 5; page++) {
-      final slice = await messages(sent: sent, offset: offset, pageSize: 40);
+      final slice = await load(offset);
       records.addAll(slice.records);
       if (slice.records.isEmpty || !slice.hasMore(offset)) break;
       offset += slice.records.length;

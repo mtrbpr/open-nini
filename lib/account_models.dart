@@ -177,16 +177,20 @@ class InboxPerson {
     required this.subject,
     required this.threads,
     this.avatarUrl,
+    this.userPath,
     this.when,
     this.unread = false,
+    this.pending = false,
     this.replyConversationId,
   });
 
   final String name;
   final String? avatarUrl;
+  final String? userPath;
   final String subject;
   final String? when;
   final bool unread;
+  final bool pending;
   final int? replyConversationId;
   final List<String> threads;
 }

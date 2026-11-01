@@ -146,7 +146,12 @@ class _InboxScreenState extends State<InboxScreen> {
                     ],
                   ),
                   onTap: () async {
-                    await openChat(context, name: person.name, avatarUrl: person.avatarUrl);
+                    await openChat(
+                      context,
+                      name: person.name,
+                      avatarUrl: person.avatarUrl,
+                      userPath: person.userPath,
+                    );
                     if (mounted) _load();
                   },
                 );

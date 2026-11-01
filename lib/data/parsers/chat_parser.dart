@@ -72,6 +72,41 @@ String? _when(AccountRecord record) {
   return subtitle;
 }
 
+const pendingRequestLabel = 'در انتظار پذیرش';
+const startChatLabel = 'گفتگو را شروع کنید';
+
+List<InboxPerson> mergeInbox(
+  List<InboxPerson> conversations,
+  List<AccountRecord> requests,
+  List<AccountRecord> friends,
+) {
+  final people = [...conversations];
+  bool known(String name) => people.any((person) => person.name == name);
+
+  void add(AccountRecord record, {required bool pending, required String subject}) {
+    final name = record.title.trim();
+    if (name.isEmpty || known(name)) return;
+    people.add(
+      InboxPerson(
+        name: name,
+        avatarUrl: record.imageUrl,
+        userPath: record.path,
+        subject: subject,
+        pending: pending,
+        threads: const [],
+      ),
+    );
+  }
+
+  for (final request in requests) {
+    add(request, pending: true, subject: pendingRequestLabel);
+  }
+  for (final friend in friends) {
+    add(friend, pending: false, subject: startChatLabel);
+  }
+  return people;
+}
+
 class _Bucket {
   _Bucket(this.name, this.avatarUrl);
 

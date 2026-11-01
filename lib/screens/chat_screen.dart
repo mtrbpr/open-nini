@@ -24,6 +24,7 @@ class _ChatScreenState extends State<ChatScreen> {
   var _failed = false;
   var _busy = false;
   var _blocked = false;
+  var _waiting = false;
   String? _error;
 
   @override
@@ -51,11 +52,14 @@ class _ChatScreenState extends State<ChatScreen> {
       final api = NiniScope.of(context).account;
       final view = await api.conversation(widget.name, avatarUrl: widget.avatarUrl);
       final guid = _guid;
-      final friend = guid == null || view.messages.isNotEmpty || await api.isFriend(guid);
+      final friend = guid != null && await api.isFriend(guid);
+      final pending = guid != null && !friend && await api.hasPendingRequest(guid);
+      final unlocked = guid == null || view.messages.isNotEmpty || friend;
       if (!mounted) return;
       setState(() {
         _view = view;
-        _blocked = !friend;
+        _blocked = !unlocked;
+        _waiting = pending && !friend && view.messages.isEmpty;
         _loading = false;
       });
     } catch (_) {
@@ -100,6 +104,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (friendsOnlyFailure(failure)) {
         setState(() {
           _blocked = true;
+          _waiting = true;
           _error = null;
         });
         return;
@@ -184,7 +189,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                     child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   ),
-                _blocked ? _inviteBar() : _composer(),
+                _waiting
+                    ? _waitingBar()
+                    : _blocked
+                    ? _inviteBar()
+                    : _composer(),
               ],
             ),
     );
@@ -245,6 +254,19 @@ class _ChatScreenState extends State<ChatScreen> {
                   : const Icon(Icons.send),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _waitingBar() {
+    return const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Text(
+          'درخواست دوستی در انتظار پذیرش است. بعد از پذیرفتن می‌توانید پیام بفرستید.',
+          textAlign: TextAlign.center,
         ),
       ),
     );

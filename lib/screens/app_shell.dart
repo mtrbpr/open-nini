@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../nini_scope.dart';
+
 class InboxSignal extends InheritedWidget {
   const InboxSignal({required this.tick, required super.child, super.key});
 
@@ -39,6 +41,8 @@ class _AppShellState extends State<AppShell> {
     } else if (index != _lastIndex) {
       _lastIndex = index;
     }
+    final signedIn = NiniScope.of(context).signedIn;
+    final accountIcon = signedIn ? Icons.person : Icons.person_outline;
     return InboxSignal(
       tick: _inboxTick,
       child: Scaffold(
@@ -48,12 +52,21 @@ class _AppShellState extends State<AppShell> {
           onDestinationSelected: (selected) {
             widget.navigationShell.goBranch(selected, initialLocation: selected == index);
           },
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.forum_outlined), selectedIcon: Icon(Icons.forum), label: 'تبادل نظر'),
-            NavigationDestination(
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.forum_outlined),
+              selectedIcon: Icon(Icons.forum),
+              label: 'تبادل نظر',
+            ),
+            const NavigationDestination(
               icon: Icon(Icons.chat_bubble_outline),
               selectedIcon: Icon(Icons.chat_bubble),
               label: 'پیام‌ها',
+            ),
+            NavigationDestination(
+              icon: Icon(accountIcon),
+              selectedIcon: Icon(accountIcon),
+              label: signedIn ? 'نی‌نی‌سایت من' : 'ورود',
             ),
           ],
         ),

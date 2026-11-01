@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:open_nini/account_models.dart';
 import 'package:open_nini/data/parsers/parsers.dart';
 
 void main() {
@@ -50,6 +51,51 @@ void main() {
     expect(person.unread, isTrue);
     expect(person.replyConversationId, 4);
     expect(person.threads, ['/profile/conversation/4', '/profile/conversation/8']);
+  });
+
+  test('a sent request with no messages is one pending row', () {
+    const request = AccountRecord(
+      title: 'مریم',
+      imageUrl: 'https://example.com/m.jpg',
+      path: '/user/abc/maryam',
+    );
+
+    final people = mergeInbox(const [], const [request], const []);
+
+    expect(people, hasLength(1));
+    expect(people.single.pending, isTrue);
+    expect(people.single.subject, pendingRequestLabel);
+    expect(people.single.userPath, '/user/abc/maryam');
+  });
+
+  test('a conversation is not duplicated by a sent request or a friendship', () {
+    final conversations = groupConversations(
+      parseMessages(
+        jsonDecode(
+          '{"receivedMessages":[{"ConversationId":4,"Subject":"سلام","Nickname":"مریم","Readed":1,"ConversationUrl":"/profile/conversation/4","Day":"امروز","TimeOfDay":"12:00"}],"totalCount":1}',
+        ),
+        sent: false,
+      ).records,
+      const [],
+    );
+    const request = AccountRecord(title: 'مریم', path: '/user/abc/maryam');
+    const friend = AccountRecord(title: 'مریم', path: '/user/abc/maryam');
+
+    final people = mergeInbox(conversations, const [request], const [friend]);
+
+    expect(people, hasLength(1));
+    expect(people.single.pending, isFalse);
+    expect(people.single.subject, 'سلام');
+  });
+
+  test('a friend with no messages stays as a chat that can start', () {
+    const friend = AccountRecord(title: 'سارا', path: '/user/def/sara');
+
+    final people = mergeInbox(const [], const [], const [friend]);
+
+    expect(people.single.pending, isFalse);
+    expect(people.single.subject, startChatLabel);
+    expect(people.single.userPath, '/user/def/sara');
   });
 
   test('the first line of a message becomes the subject', () {

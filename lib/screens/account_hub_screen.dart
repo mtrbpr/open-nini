@@ -19,6 +19,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
   AccountShell? _shell;
   var _loading = true;
   String? _error;
+  bool? _wasSignedIn;
 
   @override
   void initState() {
@@ -26,6 +27,18 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final signedIn = NiniScope.of(context).signedIn;
+    if (signedIn && _wasSignedIn == false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load();
+      });
+    }
+    _wasSignedIn = signedIn;
   }
 
   Future<void> _load() async {
@@ -78,16 +91,29 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
         actions: [
           if (repository.signedIn)
             TextButton(
-              onPressed: () async {
-                await repository.signOut();
-                if (context.mounted) context.pop();
-              },
+              onPressed: () => repository.signOut(),
               child: const Text('خروج'),
             ),
         ],
       ),
       body: !repository.signedIn
-          ? const EmptyState(message: 'برای دیدن نمایه وارد شوید.')
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'برای دیدن نمایه وارد شوید.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(onPressed: () => context.push('/sign-in'), child: const Text('ورود')),
+                  ],
+                ),
+              ),
+            )
           : _body(),
     );
   }
