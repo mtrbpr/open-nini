@@ -9,7 +9,8 @@ void main() {
   String fixture(String name) => File('test/fixtures/$name').readAsStringSync();
 
   test('discussion index groups boards and reads the latest thread', () {
-    final groups = parseDiscussionIndex(fixture('discussion_index.html'));
+    final index = parseDiscussionIndex(fixture('discussion_index.html'));
+    final groups = index.groups;
 
     expect(groups, hasLength(1));
     expect(groups.single.id, 3);
@@ -24,6 +25,22 @@ void main() {
     expect(board.latestTitle, 'چند هفته برم سونو');
     expect(board.latestAuthor, 'mommjoooonnn');
     expect(board.latestWhen, 'امروز 07:04');
+
+    expect(index.highlights.map((section) => section.title), [
+      'جدیدترین تاپیک های 2 روز گذشته',
+      'تاپیک های به روز شده',
+      'پربازدیدترین تاپیک های امروز',
+      'داغ ترین های تاپیک های 2 روز گذشته',
+      'داغ ترین های تاپیک های امروز',
+    ]);
+    final newest = index.highlights.first.topics.single;
+    expect(newest.id, 19007059);
+    expect(newest.path, '/discussion/topic/19007059/shoes');
+    expect(newest.subtitle, 'نچرال · 3 ثانیه پیش');
+    final updated = index.highlights[1].topics.single;
+    expect(updated.path, '/discussion/topic/19007046/feel');
+    expect(updated.subtitle, 'من میترسم پشیمون بشم · 1 دقیقه پیش');
+    expect(index.highlights[2].topics.single.subtitle, 'sisi_ · 10 ساعت پیش');
   });
 
   test('board page reads one thread and the last pagination page', () {

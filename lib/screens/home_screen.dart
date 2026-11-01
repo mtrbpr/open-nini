@@ -14,17 +14,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<List<BoardGroup>>? _groups;
+  Future<DiscussionIndex>? _index;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _groups ??= NiniScope.of(context).fetchIndex();
+    _index ??= NiniScope.of(context).fetchIndex();
   }
 
   Future<void> _reload() async {
     final future = NiniScope.of(context).fetchIndex(refresh: true);
-    setState(() => _groups = future);
+    setState(() => _index = future);
     try {
       await future;
     } catch (_) {}
@@ -33,32 +33,55 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('nini')),
-      body: FutureBuilder<List<BoardGroup>>(
-        future: _groups ?? Future.value(const <BoardGroup>[]),
+      body: FutureBuilder<DiscussionIndex>(
+        future: _index,
         builder: (context, snapshot) {
-          if (_groups == null ||
+          if (_index == null ||
               (snapshot.connectionState != ConnectionState.done && !snapshot.hasData)) {
             return const LoadingState();
           }
-          if (snapshot.hasError) return ErrorState(onRetry: _reload);
-          final groups = snapshot.data ?? const <BoardGroup>[];
-          if (groups.isEmpty) {
+          if (snapshot.hasError || snapshot.data == null) return ErrorState(onRetry: _reload);
+          final page = snapshot.data!;
+          if (page.groups.isEmpty && page.highlights.isEmpty) {
             return const EmptyState(message: 'بحثی پیدا نشد.');
           }
           return RefreshIndicator(
             onRefresh: _reload,
-            child: GridView.builder(
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.92,
-              ),
-              itemCount: groups.length,
-              itemBuilder: (context, index) => _DiscussionTile(group: groups[index]),
+              slivers: [
+                if (page.groups.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.82,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _DiscussionTile(group: page.groups[index]),
+                        childCount: page.groups.length,
+                      ),
+                    ),
+                  ),
+                for (final section in page.highlights) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+                      child: Text(section.title, style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, itemIndex) => _HighlightTile(topic: section.topics[itemIndex]),
+                      childCount: section.topics.length,
+                    ),
+                  ),
+                ],
+                const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+              ],
             ),
           );
         },
@@ -81,23 +104,64 @@ class _DiscussionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: () => openDiscussion(context, group),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 discussionIcon(group.icon),
-                size: 40,
+                size: 24,
                 color: theme.colorScheme.primary,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 group.name,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
+                style: theme.textTheme.titleSmall,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HighlightTile extends StatelessWidget {
+  const _HighlightTile({required this.topic});
+
+  final HighlightTopic topic;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final subtitle = topic.subtitle;
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => openTopic(context, id: topic.id, path: topic.path, title: topic.title),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                topic.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall,
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
             ],
           ),
         ),

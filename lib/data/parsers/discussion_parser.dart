@@ -4,8 +4,23 @@ import '../../models.dart';
 import '../dates.dart';
 import 'html_utils.dart';
 
-List<BoardGroup> parseDiscussionIndex(String html) {
+const _highlightTitles = [
+  'جدیدترین تاپیک های 2 روز گذشته',
+  'تاپیک های به روز شده',
+  'پربازدیدترین تاپیک های امروز',
+  'داغ ترین های تاپیک های 2 روز گذشته',
+  'داغ ترین های تاپیک های امروز',
+];
+
+DiscussionIndex parseDiscussionIndex(String html) {
   final document = parseDocument(html);
+  return DiscussionIndex(
+    groups: _groups(document),
+    highlights: _highlights(document),
+  );
+}
+
+List<BoardGroup> _groups(Document document) {
   final shortcuts = <int, _Shortcut>{};
   final shortcutOrder = <int>[];
   for (final link in document.querySelectorAll('a.shortbox-discuss')) {
@@ -119,6 +134,101 @@ Element? _nearestDetails(Element link) {
     current = current.parent;
   }
   return link.parent?.querySelector('.category--details');
+}
+
+List<TopicSection> _highlights(Document document) {
+  final found = <String, TopicSection>{};
+  for (final section in document.querySelectorAll('div.newest--topic')) {
+    _keepSection(found, section, '.newest--topic__title', _newestTopics);
+  }
+  for (final section in document.querySelectorAll('div.newest-reply')) {
+    _keepSection(found, section, '.newest-reply__title', _updatedTopics);
+  }
+  for (final section in document.querySelectorAll('div.most-viewed-topic')) {
+    _keepSection(found, section, '.most-viewed-topic__title', _viewedTopics);
+  }
+  return [
+    for (final title in _highlightTitles)
+      if (found[title] != null) found[title]!,
+  ];
+}
+
+void _keepSection(
+  Map<String, TopicSection> found,
+  Element section,
+  String titleSelector,
+  List<HighlightTopic> Function(Element section) topicsOf,
+) {
+  final title = collapseSpace(section.querySelector(titleSelector)?.text ?? '');
+  if (!_highlightTitles.contains(title) || found.containsKey(title)) return;
+  final topics = topicsOf(section);
+  if (topics.isEmpty) return;
+  found[title] = TopicSection(title: title, topics: topics);
+}
+
+List<HighlightTopic> _newestTopics(Element section) {
+  return [
+    for (final item in section.querySelectorAll('div.item'))
+      ?_topicFromLink(item.querySelector('a.subject'), subtitle: _authorTime(item)),
+  ];
+}
+
+List<HighlightTopic> _viewedTopics(Element section) {
+  return [
+    for (final item in section.querySelectorAll('.most-viewed-topic__item'))
+      ?_topicFromLink(
+        item.querySelector('.most-viewed-topic__category a'),
+        subtitle: _authorTime(item),
+      ),
+  ];
+}
+
+List<HighlightTopic> _updatedTopics(Element section) {
+  final topics = <HighlightTopic>[];
+  for (final item in section.querySelectorAll('.newest-reply__item')) {
+    Element? titleLink;
+    for (final link in item.querySelectorAll('a')) {
+      final href = link.attributes['href'] ?? '';
+      if (href.contains('postId') || parseTopicLink(href) == null) continue;
+      titleLink = link;
+      break;
+    }
+    final topic = _topicFromLink(
+      titleLink,
+      subtitle: _join([elementText(item.querySelector('.newest-reply__message')), _relativeTime(item)]),
+    );
+    if (topic != null) topics.add(topic);
+  }
+  return topics;
+}
+
+HighlightTopic? _topicFromLink(Element? link, {String? subtitle}) {
+  if (link == null) return null;
+  final topic = parseTopicLink(link.attributes['href'] ?? '');
+  final title = collapseSpace(link.text);
+  if (topic == null || title.isEmpty) return null;
+  return HighlightTopic(id: topic.id, title: title, path: topic.path, subtitle: subtitle);
+}
+
+String? _authorTime(Element item) => _join([elementText(item.querySelector('a.by-user')), _relativeTime(item)]);
+
+String? _relativeTime(Element item) {
+  final row =
+      item.querySelector('.newest-reply__reply-count') ?? item.querySelector('.most-viewed-topic__view-count');
+  if (row == null) return null;
+  for (final span in row.querySelectorAll('span')) {
+    if (span.classes.contains('sep')) continue;
+    final text = collapseSpace(span.text.replaceAll('\u00a0', ' '));
+    if (text.isEmpty || text == '|' || text == 'توسط') continue;
+    return text;
+  }
+  return null;
+}
+
+String? _join(List<String?> parts) {
+  final values = [for (final part in parts) if (part != null && part.isNotEmpty) part];
+  if (values.isEmpty) return null;
+  return values.join(' · ');
 }
 
 String _categoryName(Element heading) {

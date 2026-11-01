@@ -25,8 +25,8 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
   }
 
   Future<BoardGroup?> _load({bool refresh = false}) async {
-    final groups = await NiniScope.of(context).fetchIndex(refresh: refresh);
-    for (final group in groups) {
+    final index = await NiniScope.of(context).fetchIndex(refresh: refresh);
+    for (final group in index.groups) {
       if (group.id == widget.id) return group;
     }
     return null;

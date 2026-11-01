@@ -6,9 +6,9 @@ class NiniRepository {
   NiniRepository({NiniClient? client}) : _client = client ?? NiniClient();
 
   final NiniClient _client;
-  List<BoardGroup>? _index;
+  DiscussionIndex? _index;
 
-  Future<List<BoardGroup>> fetchIndex({bool refresh = false}) async {
+  Future<DiscussionIndex> fetchIndex({bool refresh = false}) async {
     if (!refresh && _index != null) return _index!;
     final html = await _client.get('/discussion');
     _index = parseDiscussionIndex(html);

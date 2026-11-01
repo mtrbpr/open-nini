@@ -1,3 +1,31 @@
+class DiscussionIndex {
+  const DiscussionIndex({required this.groups, required this.highlights});
+
+  final List<BoardGroup> groups;
+  final List<TopicSection> highlights;
+}
+
+class TopicSection {
+  const TopicSection({required this.title, required this.topics});
+
+  final String title;
+  final List<HighlightTopic> topics;
+}
+
+class HighlightTopic {
+  const HighlightTopic({
+    required this.id,
+    required this.title,
+    required this.path,
+    this.subtitle,
+  });
+
+  final int id;
+  final String title;
+  final String path;
+  final String? subtitle;
+}
+
 class BoardGroup {
   const BoardGroup({
     required this.id,
